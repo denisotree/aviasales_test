@@ -1,0 +1,38 @@
+version: '3.3'
+
+services:
+  flights_server:
+    build: docker/flights_server
+    container_name: flights_server
+    volumes:
+      - ./app:/var/www/html
+    working_dir: /etc/nginx
+    links:
+      - flights_service
+      - flights_db
+    ports:
+      - 8000:80
+  flights_service:
+    build: docker/flights_service
+    container_name: flights_service
+    volumes:
+      - ./app:/var/www/html
+    working_dir: /var/www/html
+    depends_on:
+      - flights_db
+  flights_db:
+    image: mongo
+    container_name: flights_db
+    restart: always
+    environment:
+      MONGODB_USER: ${USER}
+      MONGODB_PASS: ${PASSWORD}
+    volumes:
+      - ./docker/flights_db/mongo.yml:/etc/mongo/mongo.yml
+      - data-volume:/data/db
+    ports:
+      - 27017:27017
+    command: mongod --config /etc/mongo/mongo.yml
+
+volumes:
+  data-volume:
